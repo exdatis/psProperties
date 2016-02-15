@@ -206,6 +206,37 @@ public class DbProperties {
         }
 
     }
+    
+    /**
+     * Create Java Properties (this values)
+     * @return Java Properties
+     */
+    public Properties createJavaProperties(){
+        Properties cnf = new Properties();
+        // set values
+        cnf.setProperty(KEY_USER, this.dbUser);
+        cnf.setProperty(KEY_PWD, this.dbPwd);
+        cnf.setProperty(KEY_HOST, this.dbHost);
+        
+        return cnf;
+    }
+    
+    /**
+     * Create Java Properties (using parameters)
+     * @param dbUser
+     * @param dbPwd
+     * @param dbHost
+     * @return Java Properties
+     */
+    public Properties createJavaProperties(String dbUser, String dbPwd, String dbHost){
+       Properties cnf = new Properties();
+        // set values
+        cnf.setProperty(KEY_USER, dbUser);
+        cnf.setProperty(KEY_PWD, dbPwd);
+        cnf.setProperty(KEY_HOST, dbHost);
+        
+        return cnf;        
+    }
 
     /**
      * encrypt Java Properties values and return new(encrypted)
@@ -213,22 +244,23 @@ public class DbProperties {
      * @return encrypted Java Properties
      */
     public Properties encryptProperties(Properties cnf) {
-        // new instance
-        Properties encProp = new Properties();
         // encryptor
         BasicTextEncryptor enc = new BasicTextEncryptor();
         enc.setPassword(this.sep);
         // fields
-        DbProperties currProperties = new DbProperties();
+        DbProperties currDbProperties = new DbProperties();
         // set value
-        currProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
-        currProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
-        currProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
+        currDbProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
+        currDbProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
+        currDbProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
         
-        //encrypt
-        encProp.setProperty(KEY_USER, enc.encrypt(currProperties.getDbUser()));
-        encProp.setProperty(KEY_PWD, enc.encrypt(currProperties.getDbPwd()));
-        encProp.setProperty(KEY_HOST, enc.encrypt(currProperties.getDbHost()));
+        DbProperties encDbProperties = new DbProperties();  // encrypted DbProperties
+        // set value
+        encDbProperties.setDbUser(enc.encrypt(currDbProperties.getDbUser()));
+        encDbProperties.setDbPwd(enc.encrypt(currDbProperties.getDbPwd()));
+        encDbProperties.setDbHost(enc.encrypt(currDbProperties.getDbHost()));
+        
+        Properties encProp = encDbProperties.createJavaProperties();
         
         // return encrypted
         return encProp;
@@ -240,24 +272,25 @@ public class DbProperties {
      * @return Java Properties (decrypted)
      */
     public Properties decryptProperties(Properties cnf) {
-       // new instance (decrypted)
-        Properties decProp = new Properties();
         // encryptor
         BasicTextEncryptor enc = new BasicTextEncryptor();
         enc.setPassword(this.sep);
         // fields
-        DbProperties currProperties = new DbProperties();
+        DbProperties currDbProperties = new DbProperties();
         // set value
-        currProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
-        currProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
-        currProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
+        currDbProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
+        currDbProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
+        currDbProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
         
-        //decrypt
-        decProp.setProperty(KEY_USER, enc.decrypt(currProperties.getDbUser()));
-        decProp.setProperty(KEY_PWD, enc.decrypt(currProperties.getDbPwd()));
-        decProp.setProperty(KEY_HOST, enc.decrypt(currProperties.getDbHost()));
+        DbProperties decDbProperties = new DbProperties();  // decrypted DbProperties
+        // set value
+        decDbProperties.setDbUser(enc.decrypt(currDbProperties.getDbUser()));
+        decDbProperties.setDbPwd(enc.decrypt(currDbProperties.getDbPwd()));
+        decDbProperties.setDbHost(enc.decrypt(currDbProperties.getDbHost()));
         
-        // return encrypted
+        Properties decProp = decDbProperties.createJavaProperties();
+        
+        // return decrypted
         return decProp;
     }
 }
