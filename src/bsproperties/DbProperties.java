@@ -32,9 +32,9 @@ public class DbProperties {
     /*
      * static variable declaration
      */
-    static final String KEY_USER = "DB_USER";
-    static final String KEY_PWD = "DB_PWD";
-    static final String KEY_HOST = "DB_HOST";
+    private static final String KEY_USER = "DB_USER";
+    private static final String KEY_PWD = "DB_PWD";
+    private static final String KEY_HOST = "DB_HOST";
     /*
      * variable declaration
      */
@@ -207,13 +207,57 @@ public class DbProperties {
 
     }
 
-    //TODO
+    /**
+     * encrypt Java Properties values and return new(encrypted)
+     * @param cnf (Java Properties)
+     * @return encrypted Java Properties
+     */
     public Properties encryptProperties(Properties cnf) {
-        return null;
+        // new instance
+        Properties encProp = new Properties();
+        // encryptor
+        BasicTextEncryptor enc = new BasicTextEncryptor();
+        enc.setPassword(this.sep);
+        // fields
+        DbProperties currProperties = new DbProperties();
+        // set value
+        currProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
+        currProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
+        currProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
+        
+        //encrypt
+        encProp.setProperty(KEY_USER, enc.encrypt(currProperties.getDbUser()));
+        encProp.setProperty(KEY_PWD, enc.encrypt(currProperties.getDbPwd()));
+        encProp.setProperty(KEY_HOST, enc.encrypt(currProperties.getDbHost()));
+        
+        // return encrypted
+        return encProp;
     }
 
-    //TODO
+    /**
+     * Decrypt existent Java Properties and return new(decrypted)
+     * @param cnf (Java Properties)
+     * @return Java Properties (decrypted)
+     */
     public Properties decryptProperties(Properties cnf) {
-        return null;
+       // new instance (decrypted)
+        Properties decProp = new Properties();
+        // encryptor
+        BasicTextEncryptor enc = new BasicTextEncryptor();
+        enc.setPassword(this.sep);
+        // fields
+        DbProperties currProperties = new DbProperties();
+        // set value
+        currProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
+        currProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
+        currProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
+        
+        //decrypt
+        decProp.setProperty(KEY_USER, enc.decrypt(currProperties.getDbUser()));
+        decProp.setProperty(KEY_PWD, enc.decrypt(currProperties.getDbPwd()));
+        decProp.setProperty(KEY_HOST, enc.decrypt(currProperties.getDbHost()));
+        
+        // return encrypted
+        return decProp;
     }
 }
