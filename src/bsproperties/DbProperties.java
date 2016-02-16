@@ -29,19 +29,20 @@ import org.jasypt.util.text.BasicTextEncryptor;
  */
 public class DbProperties {
 
-    /*
-     * static variable declaration
+    /**
+     * Static variable declaration
      */
-    private static final String KEY_USER = "DB_USER";
-    private static final String KEY_PWD = "DB_PWD";
-    private static final String KEY_HOST = "DB_HOST";
-    /*
-     * variable declaration
+    public static final String KEY_USER = "DB_USER";
+    public static final String KEY_PWD = "DB_PWD";
+    public static final String KEY_HOST = "DB_HOST";
+    /**
+     * class fields
      */
     private String dbUser;
     private String dbPwd;
     private String dbHost;
-    /*
+    
+    /**
      * final variable(set encryption password)
      */
 
@@ -81,7 +82,7 @@ public class DbProperties {
     public DbProperties(String dbUser, String dbPwd, String DbHost) {
         this.dbUser = dbUser;
         this.dbPwd = dbPwd;
-        this.dbHost = dbHost;
+        this.dbHost = DbHost;
     }
 
     /**
@@ -142,7 +143,7 @@ public class DbProperties {
      * @param originalString
      * @return (encrypted String)
      */
-    private String getEncryptedValue(String originalString) {
+    public String getEncryptedValue(String originalString) {
 
         // create encryptor
         BasicTextEncryptor enc = new BasicTextEncryptor();
@@ -159,7 +160,7 @@ public class DbProperties {
      * @param originalString
      * @return (decrypted String)
      */
-    private String getDecryptedValue(String originalString) {
+    public String getDecryptedValue(String originalString) {
         // create encryptor
         BasicTextEncryptor enc = new BasicTextEncryptor();
         // set password
@@ -177,7 +178,7 @@ public class DbProperties {
      * @throws FileNotFoundException
      * @throws IOException
      */
-    public Properties readPropertiesFile(String path) throws FileNotFoundException, IOException {
+    public static Properties readPropertiesFile(String path) throws FileNotFoundException, IOException {
         //read file
         FileInputStream fs = new FileInputStream(path);
         // create Properties object
@@ -194,7 +195,7 @@ public class DbProperties {
      * @return boolean(success or unsuccess)
      * @throws FileNotFoundException
      */
-    public boolean savePropertiesFile(Properties cnf, String path) throws FileNotFoundException {
+    public static boolean savePropertiesFile(Properties cnf, String path) throws FileNotFoundException {
         // output stream
         FileOutputStream fs = new FileOutputStream(path);
         try {
@@ -251,8 +252,11 @@ public class DbProperties {
         DbProperties currDbProperties = new DbProperties();
         // set value
         currDbProperties.setDbUser(cnf.getProperty(KEY_USER, ""));
+        //System.out.println(currDbProperties.getDbUser());
         currDbProperties.setDbPwd(cnf.getProperty(KEY_PWD, ""));
+        //System.out.println(currDbProperties.getDbPwd());
         currDbProperties.setDbHost(cnf.getProperty(KEY_HOST, "localhost"));
+        //System.out.println(currDbProperties.getDbHost());
         
         DbProperties encDbProperties = new DbProperties();  // encrypted DbProperties
         // set value

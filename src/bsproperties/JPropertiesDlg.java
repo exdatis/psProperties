@@ -16,6 +16,22 @@
  */
 package bsproperties;
 
+import java.awt.Cursor;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+
 /**
  *
  * @author morar
@@ -29,6 +45,7 @@ public class JPropertiesDlg extends javax.swing.JFrame {
         initComponents();
         // set location to desktop-center
         this.setLocationRelativeTo(null);
+        
     }
 
     /**
@@ -40,6 +57,12 @@ public class JPropertiesDlg extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jFileOpenDlg = new javax.swing.JFileChooser();
+        jFileSaveDlg = new javax.swing.JFileChooser();
+        jPUP = new javax.swing.JPopupMenu();
+        jmiShowVariables = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jmiConnect = new javax.swing.JMenuItem();
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jDbUser = new javax.swing.JPasswordField();
@@ -51,6 +74,34 @@ public class JPropertiesDlg extends javax.swing.JFrame {
         jbtnClose = new javax.swing.JButton();
         jbtnLoadProperties = new javax.swing.JButton();
 
+        jFileOpenDlg.setDialogTitle("Open properties file");
+        jFileOpenDlg.setFileFilter(new MyCustomFilter());
+
+        jFileSaveDlg.setDialogType(javax.swing.JFileChooser.SAVE_DIALOG);
+        jFileSaveDlg.setDialogTitle("Save Java properties file");
+        jFileSaveDlg.setFileFilter(new MyCustomFilter());
+
+        jmiShowVariables.setText("Show all");
+        jmiShowVariables.setToolTipText("Current vars");
+        jmiShowVariables.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jmiShowVariables.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jmiShowVariablesActionPerformed(evt);
+            }
+        });
+        jPUP.add(jmiShowVariables);
+        jPUP.add(jSeparator1);
+
+        jmiConnect.setText("Test connection");
+        jmiConnect.setToolTipText("Check mysql");
+        jmiConnect.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jmiConnect.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jmiConnectActionPerformed(evt);
+            }
+        });
+        jPUP.add(jmiConnect);
+
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("The book store - Hol");
         setResizable(false);
@@ -60,6 +111,7 @@ public class JPropertiesDlg extends javax.swing.JFrame {
         jLabel1.setText("Db user");
 
         jLabel2.setText("DbPassword");
+        jLabel2.setComponentPopupMenu(jPUP);
 
         jLabel3.setText("Db host");
 
@@ -108,6 +160,11 @@ public class JPropertiesDlg extends javax.swing.JFrame {
         jbtnSave.setText("Sačuvaj");
         jbtnSave.setToolTipText("Sačuvaj izmene");
         jbtnSave.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jbtnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbtnSaveActionPerformed(evt);
+            }
+        });
 
         jbtnClose.setText("Izadji");
         jbtnClose.setToolTipText("Zatvori dialog");
@@ -121,6 +178,11 @@ public class JPropertiesDlg extends javax.swing.JFrame {
         jbtnLoadProperties.setText("Učitaj");
         jbtnLoadProperties.setToolTipText("Učitaj postojeći file");
         jbtnLoadProperties.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jbtnLoadProperties.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbtnLoadPropertiesActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -172,10 +234,138 @@ public class JPropertiesDlg extends javax.swing.JFrame {
         this.jDbHost.selectAll();
     }//GEN-LAST:event_jDbHostFocusGained
     /**
+     * run open dialog(open Java Properties file)
+     * read Properties file
+     * put values to text fields
+     * @param evt 
+     */ 
+    private void jbtnLoadPropertiesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnLoadPropertiesActionPerformed
+        String res = this.doFileOpenDlg();
+        if(res == "")
+            return;
+        // set cursor(uspesno ovaj put
+        this.setCursor(java.awt.Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        // read
+        File test = new File(res);
+        if(!test.exists())
+            return;
+        try {
+            //else read existent Java Proeprties
+            this.currProperties = DbProperties.readPropertiesFile(res);
+        } catch (IOException ex) {
+            Logger.getLogger(JPropertiesDlg.class.getName()).log(Level.SEVERE, null, ex);
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(null, e.getMessage());
+        }
+        // DbProperties
+        DbProperties temp = new DbProperties();
+        //set values
+        String encUser = this.currProperties.getProperty(DbProperties.KEY_USER);
+        String encPwd = this.currProperties.getProperty(DbProperties.KEY_PWD);
+        String encHost = this.currProperties.getProperty(DbProperties.KEY_HOST);
+        // decrypt
+        temp.setDbUser(temp.getDecryptedValue(encUser));
+        temp.setDbPwd(temp.getDecryptedValue(encPwd));
+        temp.setDbHost(temp.getDecryptedValue(encHost));
+        // this is an old decrypted properties
+        this.oldDecryptedProperties = temp.createJavaProperties();
+        // set text fields
+        this.jDbUser.setText(this.oldDecryptedProperties.getProperty(DbProperties.KEY_USER, ""));
+        this.jDbPwd.setText(this.oldDecryptedProperties.getProperty(DbProperties.KEY_PWD, ""));
+        this.jDbHost.setText(this.oldDecryptedProperties.getProperty(DbProperties.KEY_HOST, ""));
+        // reset cursor
+        this.setCursor(java.awt.Cursor.getDefaultCursor());
+    }//GEN-LAST:event_jbtnLoadPropertiesActionPerformed
+
+    private void jbtnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbtnSaveActionPerformed
+        // Save new or replace existent java properties file
+        String path = this.doFileSaveDialog();
+        String tempUser = String.copyValueOf(this.jDbUser.getPassword());
+        String tempPwd = String.copyValueOf(this.jDbPwd.getPassword());
+        DbProperties temp = new DbProperties(tempUser, tempPwd, this.jDbHost.getText());
+        this.newDecryptedProperties = temp.createJavaProperties();
+        this.currProperties = temp.encryptProperties(this.newDecryptedProperties);
+        boolean savePropertiesFile = false;
+        try {
+            savePropertiesFile = DbProperties.savePropertiesFile(this.currProperties, path);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(JPropertiesDlg.class.getName()).log(Level.SEVERE, null, ex);
+        }catch (Exception e){
+            JOptionPane.showMessageDialog(null, e.getMessage());
+        }
+        if(savePropertiesFile)
+            JOptionPane.showMessageDialog(null, "Success.");
+    }//GEN-LAST:event_jbtnSaveActionPerformed
+
+    private void jmiShowVariablesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jmiShowVariablesActionPerformed
+        // Show variables in joptionpane
+        String usr = String.copyValueOf(this.jDbUser.getPassword());
+        String pwd = String.copyValueOf(this.jDbPwd.getPassword());
+        String host = this.jDbHost.getText();
+        StringBuilder msg = new StringBuilder();
+        msg.append("User: " + usr);
+        msg.append("\nPwd: " + pwd);
+        msg.append("\nHost: " + host);
+        JOptionPane.showMessageDialog(null, msg.toString());
+    }//GEN-LAST:event_jmiShowVariablesActionPerformed
+
+    private void jmiConnectActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jmiConnectActionPerformed
+        // check mysql connection
+        String usr = String.copyValueOf(this.jDbUser.getPassword());
+        String pwd = String.copyValueOf(this.jDbPwd.getPassword());
+        String host = this.jDbHost.getText();
+        String url = "jdbc:mysql://" + host + "/information_schema";
+        Connection conn = null;
+        LocalDateTime startTime = LocalDateTime.now();
+        try {
+            conn = DriverManager.getConnection(url, usr, pwd);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, e.getMessage());
+            return;
+        }
+        // end time
+        LocalDateTime endTime = LocalDateTime.now();
+        Duration diff = Duration.between(startTime, endTime);
+        
+        //else show success msg
+        JOptionPane.showMessageDialog(null, "Success (time : " + diff.toString() + ")");
+        try {
+            if(conn != null)
+                conn.close();
+        } catch (SQLException ex) {
+            Logger.getLogger(JPropertiesDlg.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jmiConnectActionPerformed
+    /**
      * System-exit (quit app)
      */
     private void doQuitApp(){
         System.exit(0);
+    }
+    /**
+     * Dialog (find existent Java Properties file)
+     * @return (full path)
+     */
+    private String doFileOpenDlg(){
+        int res =this.jFileOpenDlg.showOpenDialog(this);
+        // return file name
+        if(res != 0)
+            return "";
+        else{
+            File selected = this.jFileOpenDlg.getSelectedFile();
+            String myResult = selected.getAbsolutePath();
+            return myResult;
+        }
+    }
+    
+    private String doFileSaveDialog(){
+        int res = this.jFileSaveDlg.showSaveDialog(this);
+        if(res != 0)
+            return "";
+        // return file name
+        File selected = this.jFileSaveDlg.getSelectedFile();
+        String myResult = selected.getAbsolutePath();
+        return myResult;
     }
     /**
      * @param args the command line arguments
@@ -211,17 +401,46 @@ public class JPropertiesDlg extends javax.swing.JFrame {
             }
         });
     }
+    
+    /**
+     * inner class (custom filter for file-open-dialog)
+     */
+    class MyCustomFilter extends javax.swing.filechooser.FileFilter {
+
+        @Override
+        public boolean accept(File file) {
+            // Allow only directories, or files with ".txt" extension
+            return file.isDirectory() || file.getAbsolutePath().endsWith(".properties");
+        }
+
+        @Override
+        public String getDescription() {
+            // This description will be displayed in the dialog,
+            // hard-coded = ugly, should be done via I18N
+            return "Java properties (*.properties)";
+        }
+    }
+    // Variables declaration
+    private Properties currProperties = null;
+    private Properties newDecryptedProperties = null;
+    private Properties oldDecryptedProperties = null;
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField jDbHost;
     private javax.swing.JPasswordField jDbPwd;
     private javax.swing.JPasswordField jDbUser;
+    private javax.swing.JFileChooser jFileOpenDlg;
+    private javax.swing.JFileChooser jFileSaveDlg;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JPopupMenu jPUP;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JButton jbtnClose;
     private javax.swing.JButton jbtnLoadProperties;
     private javax.swing.JButton jbtnSave;
+    private javax.swing.JMenuItem jmiConnect;
+    private javax.swing.JMenuItem jmiShowVariables;
     // End of variables declaration//GEN-END:variables
 }
